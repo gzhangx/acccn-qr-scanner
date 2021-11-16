@@ -1,24 +1,33 @@
-import logo from './logo.svg';
 import './App.css';
+import React, { useEffect, useState } from 'react'
+import Scanner from './Scanner';
+import { Tabs, Tab } from 'react-bootstrap'
+import RegisterForm from './RegisterForm';
 
 function App() {
+  const [tabKey, setTabKey] = useState('scanEvent');
+  const [scanResult, setScanResult] = useState('');
+  const [initialFormValues, setInitialFormValues] = useState({
+    name: '',
+    email: '',
+    id: ''
+  });
   return (
     <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+      <Tabs defaultActiveKey="scanEvent" id="mainTabs" className="mb-3" onSelect={
+        k=>setTabKey(k)
+       }>
+        <Tab eventKey="scanEvent" title="Scan">
+          <div>
+            <Scanner inScanMode={tabKey === 'scanEvent'} setScanResult={setScanResult} initialFormValues={initialFormValues} />
+            <p>{ scanResult}</p>
+          </div>
+          </Tab>
+          <Tab eventKey="registerEvent" title="Register">
+          <RegisterForm/>
+          </Tab>
+        </Tabs>
+      </div>
   );
 }
 
