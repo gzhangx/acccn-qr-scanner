@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import QrReader from 'react-qr-scanner-ios'
-
+import store from './store';
 function Scanner(props) {
     const { setScanResult } = props;
     const [errTxt, setErrTxt] = useState('');
@@ -37,7 +37,10 @@ function Scanner(props) {
                             }
                             if (text === ' ') text = '';
                             if (text) {
-                                setScanResult(text);
+                                setScanResult({
+                                    name:text,
+                                });
+                                store.db.setFieldValue('name', text);
                             }
                         }
                     }}
