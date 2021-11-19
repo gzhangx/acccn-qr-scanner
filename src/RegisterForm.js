@@ -1,13 +1,64 @@
-import React, {useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import { Formik, Form, Field, ErrorMessage } from 'formik';
 import store from './store';
 import Autocomplete from 'react-autocomplete';
+import QRCode from 'react-qr-code';
 
 function RegisterForm(props) {
+    const { qrValue, setQrValue } = props;
     const [rspMsg, setRspMsg] = useState('');
-    const [roleValue, setRoleValue] = useState('会众');
+    const [errMsg, setErrMsg] = useState('');
+    const [roleValue, setRoleValue] = useState('会众');    
+    const [allQrCodes, setAllQrCodes] = useState([]);
+    const doFetch = async body => {
+        const response = await fetch('https://acccnseatengine.azurewebsites.net/api/HttpTriggerSeat?', {
+            method: 'POST', // *GET, POST, PUT, DELETE, etc.
+            mode: 'cors', // no-cors, *cors, same-origin
+            cache: 'no-cache', // *default, no-cache, reload, force-cache, only-if-cached
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            referrerPolicy: 'no-referrer',
+            body: JSON.stringify(body),
+        });
+        const res = await response.json();
+        return res;
+    }
+    useEffect(async () => {
+        const allUsers = await doFetch({
+            action: 'actionLoadUsers'
+        });
+        if (allUsers.length) {
+            setAllQrCodes(allUsers);
+        } else {
+            setErrMsg(allUsers.responseMessage)
+        }
+    }, []);
+    
+    useEffect(async () => {
+        if (qrValue && qrValue.startsWith(store.QRPREFIX)) {
+            const v = qrValue.substr(store.QRPREFIX.length);            
+            setQrValue(null);
+            const found = await doFetch({
+                action: 'actionQueryQR',
+                qrCode: v,
+            });
+            if (!found) {
+                setErrMsg(`Failed to find QR ${v}`);
+            } else {
+                setQrValue(v);
+                store.db.setFieldValue('name', found.name);
+                store.db.setFieldValue('email', found.email);
+                store.db.setFieldValue('id', found.id);
+                                
+                const data = await doFetch(found);
+                setRspMsg(data.responseMessage);
+            }
+        }
+    },[qrValue]);
     return (
-        <div>                        
+        <div>
+            {errMsg && <div>{errMsg}</div>}
             <Formik
                 initialValues={props.initialFormValues || {
                     name: '',
@@ -40,20 +91,24 @@ function RegisterForm(props) {
                 }}
 
                 onSubmit={async (values, { setSubmitting }) => {
-                    setSubmitting(true);
-                    const response = await fetch('https://acccnseatengine.azurewebsites.net/api/HttpTriggerSeat?', {
-                        method: 'POST', // *GET, POST, PUT, DELETE, etc.
-                        mode: 'cors', // no-cors, *cors, same-origin
-                        cache: 'no-cache', // *default, no-cache, reload, force-cache, only-if-cached
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        referrerPolicy: 'no-referrer',
-                        body: JSON.stringify(values) // body data type must match "Content-Type" header
-                    });
-                    setSubmitting(false);
-                    const data = await response.json();
-                    setRspMsg(data.responseMessage);
+                    setSubmitting(true);                    
+                    const existing = allQrCodes.find(u => u.email.toLowerCase() === values.email.toLowerCase());
+                    let id = existing ? existing.id : null;                    
+                    const data = await doFetch(values);
+                    if (!id) {                        
+                        const idresponse = await doFetch({
+                            ...values,
+                            action: 'actionAddUser',
+                        });
+                        id = idresponse.id;
+                        setAllQrCodes([...allQrCodes, {
+                            ...values,
+                            id,
+                        }]);
+                    }
+                    setQrValue(id);
+                    setSubmitting(false);                    
+                    setRspMsg(data.responseMessage);                    
                     return data;
                 }}
             >
@@ -123,6 +178,11 @@ function RegisterForm(props) {
                 }
                 }
             </Formik>
+            <div className="container">
+                <div className="row">
+                    {qrValue && <QRCode value={`${store.QRPREFIX}${qrValue}`}></QRCode>}
+                </div>
+            </div>
         </div>
     );
 };

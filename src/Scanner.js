@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 import QrReader from 'react-qr-scanner-ios'
 import store from './store';
 function Scanner(props) {
-    const { setScanResult } = props;
+    const { qrValue, setQrValue, switchToForm } = props;
     const [errTxt, setErrTxt] = useState('');
     const [debugMsg, setDebugMsg] = useState('');
     const [debugHandleMsg, setDebugHandleMsg] = useState('');
@@ -37,10 +37,12 @@ function Scanner(props) {
                             }
                             if (text === ' ') text = '';
                             if (text) {
-                                setScanResult({
-                                    name:text,
-                                });
-                                store.db.setFieldValue('name', text);
+                                if (text.startsWith(store.QRPREFIX)) {
+                                    setQrValue(text);
+                                    switchToForm();
+                                } else {
+                                    setErrTxt(`Got bad text ${text}`);
+                                }
                             }
                         }
                     }}
@@ -53,6 +55,7 @@ function Scanner(props) {
                 >
                     Acccn QR Scanner v1
                 </a>
+                <p>{ qrValue}</p>
                 <p>debugHandleMsg ${debugHandleMsg}</p>
                 <p>{errTxt}</p>
             </header>

@@ -6,6 +6,7 @@ import RegisterForm from './RegisterForm';
 
 function App() {
   const [tabKey, setTabKey] = useState('scanEvent');
+  const [qrValue, setQrValue] = useState('');
   const [initialFormValues, setInitialFormValues] = useState({
     name: '',
     email: '',
@@ -13,17 +14,21 @@ function App() {
   });
   return (
     <div className="App">
-      <Tabs defaultActiveKey="scanEvent" id="mainTabs" className="mb-3" onSelect={
+      <Tabs defaultActiveKey="scanEvent" id="mainTabs" className="mb-3" activeKey={ tabKey} onSelect={
         k=>setTabKey(k)
        }>
         <Tab eventKey="scanEvent" title="Scan">
           <div>
-            <Scanner inScanMode={tabKey === 'scanEvent'} setScanResult={setInitialFormValues} initialFormValues={initialFormValues} />
+            <Scanner inScanMode={tabKey === 'scanEvent'}
+              qrValue={qrValue} setQrValue={setQrValue} switchToForm={() => {
+                setTabKey('registerEvent');
+              }}
+            />
             <p>{initialFormValues?.name}</p>
           </div>
           </Tab>
           <Tab eventKey="registerEvent" title="Register">
-          <RegisterForm/>
+          <RegisterForm qrValue={qrValue} setQrValue={setQrValue} />
           </Tab>
         </Tabs>
       </div>
