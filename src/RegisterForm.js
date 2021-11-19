@@ -8,8 +8,33 @@ function RegisterForm(props) {
     const { qrValue, setQrValue } = props;
     const [rspMsg, setRspMsg] = useState('');
     const [errMsg, setErrMsg] = useState('');
-    const [roleValue, setRoleValue] = useState('会众');    
+    const [roleValue, setRoleValue] = useState('会众');
+    const [emailValue, setEmailValue] = useState('');
+    const [nameValue, setNameValue] = useState('');
     const [allQrCodes, setAllQrCodes] = useState([]);
+    const setValFuncMap = {
+        email: setEmailValue,
+        name: setNameValue,
+    }
+    const getValFuncMap = {
+        email: emailValue,
+        name: nameValue,
+    }
+    const formNames = Object.keys(setValFuncMap);
+    const setFormValFinal = (name, val) => {
+        const doSet = store.db.setFormValueAll;
+        if (doSet) {
+            doSet(name, val);
+            const found = allQrCodes.find(c => c[name].toLowerCase() === val.toLowerCase());
+            if (found) {
+                formNames.forEach(n => {
+                    if (n !== name) {
+                        doSet(n, found[n]);
+                    }
+                })
+            }
+        }
+    }
     const doFetch = async body => {
         const response = await fetch('https://acccnseatengine.azurewebsites.net/api/HttpTriggerSeat?', {
             method: 'POST', // *GET, POST, PUT, DELETE, etc.
@@ -112,8 +137,31 @@ function RegisterForm(props) {
                     return data;
                 }}
             >
-                {({ values, errors, isSubmitting, setFieldValue }) => {
+                {({ values, errors, isSubmitting, setFieldValue,
+                    handleChange,
+                }) => {
                     store.db.setFieldValue = setFieldValue;
+                    store.db.setFormValueAll = (name, val) => {
+                        setFieldValue(name, val);
+                        setValFuncMap[name](val);
+                    }
+                    const getAutoComplete = name => (
+                        <Autocomplete
+                            getItemValue={item => item[name]}
+                            items={allQrCodes}
+                            renderItem={(item, isHighlighted) =>
+                                <div style={{ background: isHighlighted ? 'lightgray' : 'white' }}>
+                                    {item.name} - {item.email}
+                                </div>
+                            }
+                            shouldItemRender={(item, value) => item[name].toLowerCase().indexOf(value.toLowerCase()) > -1}
+                            value={getValFuncMap[name]}
+                            onChange={(e) => {                                
+                                setFormValFinal(name, e.target.value);
+                            }}
+                            onSelect={(val) => setFormValFinal(name, val)}
+                        />
+                    );
                     return <Form className="form text-center">
                         <div class="bg-primary text-white p-5 text-center">
                             <h1>Acccn Seat Register</h1>
@@ -123,14 +171,18 @@ function RegisterForm(props) {
                             <div className="row justify-content-center" >                            
                                 <div className="justify-content-right col-2">Email</div>
                                 <div className="form-group col-6">
-                                    <Field type="email" name="email" />
+                                    {
+                                        getAutoComplete('email')
+                                    }
                                     <ErrorMessage name="email" component="div" />
                                 </div>                            
                             </div>
                             <div className="row justify-content-center">
                                 <div className="justify-content-right col-2">Name</div>
                                 <div className="form-group col-6">
-                                    <Field type="text" name="name"  />
+                                    {
+                                        getAutoComplete('name')
+                                    }
                                     <ErrorMessage name="name" component="div" />
                                 </div>
                             </div>
@@ -153,14 +205,17 @@ function RegisterForm(props) {
                                             { label: '投影' },
                                             { label: '音效' },
                                             { label: '诗班' },
-                                        ]}
+                                        ]}                                        
                                         renderItem={(item, isHighlighted) =>
                                             <div style={{ background: isHighlighted ? 'lightgray' : 'white' }}>
                                                 {item.label}
                                             </div>
                                         }
                                         value={roleValue}
-                                        onChange={(e) => setRoleValue(e.target.value)}
+                                        onChange={(e) => {
+                                            setRoleValue(e.target.value);
+                                            handleChange(e);
+                                        }}
                                         onSelect={(val) => setRoleValue(val)}
                                     />
                                     <ErrorMessage name="role" component="div" />
