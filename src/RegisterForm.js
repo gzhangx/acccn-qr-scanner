@@ -56,7 +56,7 @@ function RegisterForm(props) {
                     if (!values?.count) {
                         errors.count = 'Required';
                     } else {
-                        if (isNaN(parseInt(values.count))) {
+                        if (!values.count.match(/^[0-9]+$/)) {
                             errors.count = 'Count must be a number';
                         }
                     }
