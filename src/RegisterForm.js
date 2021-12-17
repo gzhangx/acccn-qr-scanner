@@ -27,17 +27,7 @@ function RegisterForm(props) {
         const res = await response.json();
         return res;
     }
-    useEffect(async () => {
-        const allUsers = await doFetch({
-            action: 'actionLoadUsers'
-        });
-        if (allUsers.length) {
-            setAllQrCodes(allUsers);
-        } else {
-            setErrMsg(allUsers.responseMessage)
-        }
-    }, []);
-    
+
     useEffect(async () => {
         if (qrValue && qrValue.startsWith(store.QRPREFIX)) {
             const v = qrValue.substr(store.QRPREFIX.length);            
@@ -58,7 +48,11 @@ function RegisterForm(props) {
                 setRspMsg(data.responseMessage);
             }
         }
-    },[qrValue]);
+        if (initialFormValues?.name) {
+            store.db.setFieldValue('name', initialFormValues.name);
+            store.db.setFieldValue('email', initialFormValues.email);
+        }
+    }, [qrValue, initialFormValues]);
     return (
         <div>
             {errMsg && <div>{errMsg}</div>}
@@ -95,21 +89,21 @@ function RegisterForm(props) {
 
                 onSubmit={async (values, { setSubmitting }) => {
                     setSubmitting(true);                    
-                    const existing = allQrCodes.find(u => u.email.toLowerCase() === values.email.toLowerCase());
-                    let id = existing ? existing.id : null;                    
+                    //const existing = allQrCodes.find(u => u.email.toLowerCase() === values.email.toLowerCase());
+                    //let id = existing ? existing.id : null;                    
                     const data = await doFetch(values);
-                    if (!id) {                        
-                        const idresponse = await doFetch({
-                            ...values,
-                            action: 'actionAddUser',
-                        });
-                        id = idresponse.id;
-                        setAllQrCodes([...allQrCodes, {
-                            ...values,
-                            id,
-                        }]);
-                    }
-                    setQrValue(id);
+                    //if (!id) {                        
+                    //    const idresponse = await doFetch({
+                    //        ...values,
+                    //        action: 'actionAddUser',
+                    //    });
+                    //    id = idresponse.id;
+                    //    setAllQrCodes([...allQrCodes, {
+                    //        ...values,
+                    //        id,
+                    //    }]);
+                    //}
+                    //setQrValue(id);
                     setSubmitting(false);                    
                     setRspMsg(data.responseMessage);                    
                     return data;
