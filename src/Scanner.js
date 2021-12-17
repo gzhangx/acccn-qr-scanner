@@ -52,7 +52,9 @@ function Scanner(props) {
                                         const pp = p.split('=');
                                         acc[decodeURIComponent(pp[0])] =  decodeURIComponent(pp[1]).trim();
                                         return acc;
-                                    }, {});
+                                    }, {
+                                        count:1,
+                                    });
                                     setInitialFormValues(json);
                                     switchToForm();
                                 }

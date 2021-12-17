@@ -54,10 +54,10 @@ function RegisterForm(props) {
                     };
 
                     if (!values?.count) {
-                        errors.name = 'Required';
+                        errors.count = 'Required';
                     } else {
                         if (isNaN(parseInt(values.count))) {
-                            errors.name = 'Count must be a number';
+                            errors.count = 'Count must be a number';
                         }
                     }
                     return errors;
