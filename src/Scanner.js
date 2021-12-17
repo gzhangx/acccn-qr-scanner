@@ -2,15 +2,19 @@ import React, { useState } from 'react'
 import QrReader from 'react-qr-scanner-ios'
 import store from './store';
 function Scanner(props) {
-    const { qrValue, setQrValue, switchToForm } = props;
+    const { qrValue, setQrValue, switchToForm, initialFormValues, setInitialFormValues } = props;
     const [errTxt, setErrTxt] = useState('');
     const [debugMsg, setDebugMsg] = useState('');
     const [debugHandleMsg, setDebugHandleMsg] = useState('');
-
+    const scannerRef = React.createRef();
+    const legacyMode = flase;
+    const scanUrl = 'https://acccncheckin.azurewebsites.net/api/scan?param=';
     return (
         <div className="App">
             <header className="App-header">
                 <QrReader
+                    ref={scannerRef}
+                    legacyMode={legacyMode}
                     delay={500}
                     facingMode="rear"
                     isIos={true}
@@ -40,13 +44,34 @@ function Scanner(props) {
                                 if (text.startsWith(store.QRPREFIX)) {
                                     setQrValue(text);
                                     switchToForm();
-                                } else {
+                                } else if (text.startsWith(scanUrl)) {
+                                    const b64 = text.substr(scanUrl.length);
+                                    const buf = Buffer.from(b64, 'base64').toString();
+                                    const parts = buf.split('&');
+                                    const json = parts.reduce((acc, p) => {
+                                        const pp = p.split('=');
+                                        acc[decodeURIComponent(pp[0])] =  decodeURIComponent(pp[1]).trim();
+                                        return acc;
+                                    }, {});
+                                    setInitialFormValues(json);
+                                    switchToForm();
+                                }
+                                else {
                                     setErrTxt(`Got bad text ${text}`);
                                 }
                             }
                         }
                     }}
                 />
+                {
+                    legacyMode && <a href='#'
+                        onClick={
+                            e => {
+                                scannerRef.current.openImageDialog();
+                            }
+                        }
+                    >File</a>
+                }
                 <a
                     className="App-link"
                     href="https://www.acccn.org"
@@ -57,6 +82,7 @@ function Scanner(props) {
                 </a>
                 <p>{ qrValue}</p>
                 <p>debugHandleMsg ${debugHandleMsg}</p>
+                <p>{initialFormValues.name} {initialFormValues.email} { initialFormValues.role}</p>
                 <p>{errTxt}</p>
             </header>
         </div>

@@ -5,38 +5,16 @@ import Autocomplete from 'react-autocomplete';
 import QRCode from 'react-qr-code';
 
 function RegisterForm(props) {
-    const { qrValue, setQrValue } = props;
+    const { qrValue, setQrValue, initialFormValues, setInitialFormValues } = props;
     const [rspMsg, setRspMsg] = useState('');
     const [errMsg, setErrMsg] = useState('');
-    const [roleValue, setRoleValue] = useState('会众');
-    const [emailValue, setEmailValue] = useState('');
-    const [nameValue, setNameValue] = useState('');
+    const roleValue = initialFormValues['role'];
     const [allQrCodes, setAllQrCodes] = useState([]);
-    const setValFuncMap = {
-        email: setEmailValue,
-        name: setNameValue,
-    }
-    const getValFuncMap = {
-        email: emailValue,
-        name: nameValue,
-    }
-    const formNames = Object.keys(setValFuncMap);
-    const setFormValFinal = (name, val) => {
-        const doSet = store.db.setFormValueAll;
-        if (doSet) {
-            doSet(name, val);
-            const found = allQrCodes.find(c => c[name].toLowerCase() === val.toLowerCase());
-            if (found) {
-                formNames.forEach(n => {
-                    if (n !== name) {
-                        doSet(n, found[n]);
-                    }
-                })
-            }
-        }
-    }
+
+
+
     const doFetch = async body => {
-        const response = await fetch('https://acccnseatengine.azurewebsites.net/api/HttpTriggerSeat?', {
+        const response = await fetch('https://acccncheckin.azurewebsites.net/api/checkin?code=OAJh3Hrav1Y6m3BRaPnzR8D8EEfJUNVazmaa4XU0A%2FFClbMbw6pxZg%3D%3D', {
             method: 'POST', // *GET, POST, PUT, DELETE, etc.
             mode: 'cors', // no-cors, *cors, same-origin
             cache: 'no-cache', // *default, no-cache, reload, force-cache, only-if-cached
@@ -141,9 +119,12 @@ function RegisterForm(props) {
                     handleChange,
                 }) => {
                     store.db.setFieldValue = setFieldValue;
-                    store.db.setFormValueAll = (name, val) => {
+                    const setFormValueAll = (name, val) => {
                         setFieldValue(name, val);
-                        setValFuncMap[name](val);
+                        setInitialFormValues({
+                            ...initialFormValues,
+                            [name]:val,
+                        });
                     }
                     const getAutoComplete = name => (
                         <Autocomplete
@@ -155,11 +136,11 @@ function RegisterForm(props) {
                                 </div>
                             }
                             shouldItemRender={(item, value) => item[name].toLowerCase().indexOf(value.toLowerCase()) > -1}
-                            value={getValFuncMap[name]}
+                            value={initialFormValues[name]}
                             onChange={(e) => {                                
-                                setFormValFinal(name, e.target.value);
+                                setFormValueAll(name, e.target.value);                                
                             }}
-                            onSelect={(val) => setFormValFinal(name, val)}
+                            onSelect={val => setFormValueAll(name,val)}
                         />
                     );
                     return <Form className="form text-center">
@@ -213,10 +194,18 @@ function RegisterForm(props) {
                                         }
                                         value={roleValue}
                                         onChange={(e) => {
-                                            setRoleValue(e.target.value);
+                                            setInitialFormValues({
+                                                ...initialFormValues,
+                                                role: e.target.value
+                                            });
                                             handleChange(e);
                                         }}
-                                        onSelect={(val) => setRoleValue(val)}
+                                        onSelect={val => {
+                                            setInitialFormValues({
+                                                ...initialFormValues,
+                                                role: val
+                                            });
+                                        }}
                                     />
                                     <ErrorMessage name="role" component="div" />
                                 </div>

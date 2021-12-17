@@ -10,6 +10,8 @@ function App() {
   const [initialFormValues, setInitialFormValues] = useState({
     name: '',
     email: '',
+    role: '',
+    count:1,
     id: ''
   });
   return (
@@ -20,6 +22,8 @@ function App() {
         <Tab eventKey="scanEvent" title="Scan">
           <div>
             <Scanner inScanMode={tabKey === 'scanEvent'}
+              setInitialFormValues={setInitialFormValues}
+              initialFormValues={initialFormValues}
               qrValue={qrValue} setQrValue={setQrValue} switchToForm={() => {
                 setTabKey('registerEvent');
               }}
@@ -28,7 +32,9 @@ function App() {
           </div>
           </Tab>
           <Tab eventKey="registerEvent" title="Register">
-          <RegisterForm qrValue={qrValue} setQrValue={setQrValue} />
+          <RegisterForm qrValue={qrValue} setQrValue={setQrValue} initialFormValues={initialFormValues}
+            setInitialFormValues={setInitialFormValues}
+          />
           </Tab>
         </Tabs>
       </div>
