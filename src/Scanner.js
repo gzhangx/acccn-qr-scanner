@@ -7,7 +7,7 @@ function Scanner(props) {
     const [debugMsg, setDebugMsg] = useState('');
     const [debugHandleMsg, setDebugHandleMsg] = useState('');
     const scannerRef = React.createRef();
-    const legacyMode = flase;
+    const legacyMode = false;
     const scanUrl = 'https://acccncheckin.azurewebsites.net/api/scan?param=';
     return (
         <div className="App">
