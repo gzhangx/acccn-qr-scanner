@@ -28,31 +28,6 @@ function RegisterForm(props) {
         return res;
     }
 
-    useEffect(async () => {
-        if (qrValue && qrValue.startsWith(store.QRPREFIX)) {
-            const v = qrValue.substr(store.QRPREFIX.length);            
-            setQrValue(null);
-            const found = await doFetch({
-                action: 'actionQueryQR',
-                qrCode: v,
-            });
-            if (!found) {
-                setErrMsg(`Failed to find QR ${v}`);
-            } else {
-                setQrValue(v);
-                store.db.setFieldValue('name', found.name);
-                store.db.setFieldValue('email', found.email);
-                store.db.setFieldValue('id', found.id);
-                                
-                const data = await doFetch(found);
-                setRspMsg(data.responseMessage);
-            }
-        }
-        if (initialFormValues?.name) {
-            store.db.setFieldValue('name', initialFormValues.name);
-            store.db.setFieldValue('email', initialFormValues.email);
-        }
-    }, [qrValue, initialFormValues]);
     return (
         <div>
             {errMsg && <div>{errMsg}</div>}
@@ -63,7 +38,8 @@ function RegisterForm(props) {
                     count: 1,
                     id: '',
                 }}
-                validate={values => {
+                validate={() => {
+                    const values = props.initialFormValues;
                     const errors = {};
                     if (!values?.email) {
                         errors.email = 'Required';
@@ -90,23 +66,28 @@ function RegisterForm(props) {
                 onSubmit={async (values, { setSubmitting }) => {
                     setSubmitting(true);                    
                     //const existing = allQrCodes.find(u => u.email.toLowerCase() === values.email.toLowerCase());
-                    //let id = existing ? existing.id : null;                    
-                    const data = await doFetch(values);
-                    //if (!id) {                        
-                    //    const idresponse = await doFetch({
-                    //        ...values,
-                    //        action: 'actionAddUser',
-                    //    });
-                    //    id = idresponse.id;
-                    //    setAllQrCodes([...allQrCodes, {
-                    //        ...values,
-                    //        id,
-                    //    }]);
-                    //}
-                    //setQrValue(id);
-                    setSubmitting(false);                    
-                    setRspMsg(data.responseMessage);                    
-                    return data;
+                    //let id = existing ? existing.id : null; 
+                    try {
+                        const data = await doFetch(initialFormValues);
+                        //if (!id) {                        
+                        //    const idresponse = await doFetch({
+                        //        ...values,
+                        //        action: 'actionAddUser',
+                        //    });
+                        //    id = idresponse.id;
+                        //    setAllQrCodes([...allQrCodes, {
+                        //        ...values,
+                        //        id,
+                        //    }]);
+                        //}
+                        //setQrValue(id);
+                        setSubmitting(false);
+                        setRspMsg(data.responseMessage);
+                        return data;
+                    } catch (err) {
+                        setErrMsg(`error ${err.message}`);
+                        setSubmitting(false);
+                    }
                 }}
             >
                 {({ values, errors, isSubmitting, setFieldValue,
@@ -164,7 +145,9 @@ function RegisterForm(props) {
                             <div className="row justify-content-center">
                                 <div className="justify-content-right col-2">Count</div>
                                 <div className="form-group col-6">
-                                    <Field type="text" name="count" />
+                                    <Field type="text" name="count" onChange={e => {
+                                        setFormValueAll('count', e.target.value)
+                                    }} />
                                     <ErrorMessage name="count" component="div" />
                                 </div>
                             </div>
