@@ -11,6 +11,8 @@ function RegisterForm(props) {
     const roleValue = initialFormValues['role'];
     const [allQrCodes, setAllQrCodes] = useState([]);
 
+    const roles = ['会众', '诗班', '赞美队', '新人', '会友', '领诗',
+        '主席', '牧师', '讲员', '报告', '司琴', '影音', '接待', '带位'];
 
 
     const doFetch = async body => {
@@ -156,14 +158,9 @@ function RegisterForm(props) {
                                 <div className="form-group col-6">
                                     <Autocomplete
                                         getItemValue={(item) => item.label}
-                                        items={[
-                                            { label: '会众' },
-                                            { label: '主席' },
-                                            { label: '牧師' },
-                                            { label: '投影' },
-                                            { label: '音效' },
-                                            { label: '诗班' },
-                                        ]}                                        
+                                        items={
+                                            roles.map(label=>({label}))
+                                            }                                        
                                         renderItem={(item, isHighlighted) =>
                                             <div style={{ background: isHighlighted ? 'lightgray' : 'white' }}>
                                                 {item.label}
